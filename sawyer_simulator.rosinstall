@@ -8,9 +8,9 @@
     version: master
 - git:
     local-name: sawyer_robot
-    uri: https://github.com/RethinkRobotics/sawyer_robot.git
+    uri: https://github.com/sawyer-assembly2025/sawyer_robot.git
     version: master
 - git:
     local-name: sawyer_simulator
-    uri: https://github.com/RethinkRobotics/sawyer_simulator.git
+    uri: https://github.com/sawyer-assembly2025/sawyer_simulator.git
     version: master

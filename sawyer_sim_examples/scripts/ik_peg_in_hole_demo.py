@@ -171,8 +171,8 @@ class PickAndPlace(object):
 
 def load_gazebo_models(table_pose=Pose(position=Point(x=0.75, y=0.0, z=0.0)),
                        table_reference_frame="world",
-                       peg_pose=Pose(position=Point(x=0.4225, y=0.1265, z=0.7725)),
-                       hole_pose=Pose(position=Point(x=0.4225, y=-0.1, z=0.7725)),
+                       peg_pose=Pose(position=Point(x=0.7, y=0.1265, z=0.9425)),
+                       hole_pose=Pose(position=Point(x=0.7, y=-0.065, z=0.7725)),
                        object_reference_frame="world"):
     # Get Models' Path
     model_path = rospkg.RosPack().get_path('sawyer_sim_examples')+"/models/"
@@ -183,12 +183,12 @@ def load_gazebo_models(table_pose=Pose(position=Point(x=0.75, y=0.0, z=0.0)),
     
     # Load Peg URDF
     peg_xml = ''
-    with open (model_path + "peg_hole/peg_0001.urdf", "r") as block_file:
-        peg_xml=block_file.read().replace('\n', '')
+    with open (model_path + "peg_hole/peg_0001.urdf", "r") as peg_file:
+        peg_xml=peg_file.read().replace('\n', '')
     # Load Hole URDF
     hole_xml = ''
-    with open (model_path + "peg_hole/hole_0001.urdf", "r") as block_file:
-        hole_xml=block_file.read().replace('\n', '')
+    with open (model_path + "peg_hole/hole_0001.urdf", "r") as hole_file:
+        hole_xml=hole_file.read().replace('\n', '')
     
     
     # Spawn Table SDF
@@ -204,9 +204,9 @@ def load_gazebo_models(table_pose=Pose(position=Point(x=0.75, y=0.0, z=0.0)),
     try:
         spawn_urdf = rospy.ServiceProxy('/gazebo/spawn_urdf_model', SpawnModel)
         resp_urdf = spawn_urdf("peg_0001", peg_xml, "/",
-                               block_pose, object_reference_frame)
+                               peg_pose, object_reference_frame)
         resp_urdf = spawn_urdf("hole_0001", hole_xml, "/",
-                               block_pose, object_reference_frame)
+                               hole_pose, object_reference_frame)
 
     except rospy.ServiceException as e:
         rospy.logerr("Spawn URDF service call failed: {0}".format(e))
@@ -244,7 +244,7 @@ def main():
     # and the IK operates with respect to the /base frame
     load_gazebo_models()
     # Remove models from the scene on shutdown
-    rospy.on_shutdown(delete_gazebo_models)
+    #rospy.on_shutdown(delete_gazebo_models)
 
     limb = 'right'
     hover_distance = 0.15 # meters
@@ -268,23 +268,23 @@ def main():
     # You may wish to replace these poses with estimates
     # from a perception node.
     block_poses.append(Pose(
-        position=Point(x=0.45, y=0.155, z=-0.129),
+        position=Point(x=0.7, y=0.1265, z=-0.029),
         orientation=overhead_orientation))
     # Feel free to add additional desired poses for the object.
     # Each additional pose will get its own pick and place.
     block_poses.append(Pose(
-        position=Point(x=0.6, y=-0.1, z=-0.129),
+        position=Point(x=0.7, y=-0.1, z=-0.060),
         orientation=overhead_orientation))
     # Move to the desired starting angles
     print("Running. Ctrl-c to quit")
     pnp.move_to_start(starting_joint_angles)
     idx = 0
-    while not rospy.is_shutdown():
-        print("\nPicking...")
-        pnp.pick(block_poses[idx])
-        print("\nPlacing...")
-        idx = (idx+1) % len(block_poses)
-        pnp.place(block_poses[idx])
+    print("\nPicking...")
+    pnp.pick(block_poses[idx])
+    print("\nPlacing...")
+    idx = (idx+1) % len(block_poses)
+    pnp.place(block_poses[idx])
+
     return 0
 
 if __name__ == '__main__':

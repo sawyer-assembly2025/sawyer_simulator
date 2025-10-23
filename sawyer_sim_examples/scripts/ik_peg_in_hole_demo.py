@@ -131,7 +131,8 @@ class PickAndPlace(object):
             ik_step.orientation.w = q_slerp[3]
             joint_angles = self._limb.ik_request(ik_step, self._tip_name)
             if joint_angles:
-                self._limb.set_joint_positions(joint_angles)
+                    self._limb.set_joint_position_speed(0.01)
+                    self._limb.set_joint_positions(joint_angles)
             else:
                 rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
             r.sleep()
@@ -171,8 +172,8 @@ class PickAndPlace(object):
 
 def load_gazebo_models(table_pose=Pose(position=Point(x=0.75, y=0.0, z=0.0)),
                        table_reference_frame="world",
-                       peg_pose=Pose(position=Point(x=0.7, y=0.1265, z=0.9425)),
-                       hole_pose=Pose(position=Point(x=0.7, y=-0.065, z=0.7725)),
+                       peg_pose=Pose(position=Point(x=0.6, y=0.1265, z=0.9425)),
+                       hole_pose=Pose(position=Point(x=0.6, y=0.00, z=0.7725)),
                        object_reference_frame="world"):
     # Get Models' Path
     model_path = rospkg.RosPack().get_path('sawyer_sim_examples')+"/models/"
@@ -259,21 +260,21 @@ def main():
     pnp = PickAndPlace(limb, hover_distance)
     # An orientation for gripper fingers to be overhead and parallel to the obj
     overhead_orientation = Quaternion(
-                             x=-0.00142460053167,
-                             y=0.999994209902,
-                             z=-0.00177030764765,
-                             w=0.00253311793936)
+                             x=0.0,
+                             y=-1.0,
+                             z=0.0,
+                             w=0.0)
     block_poses = list()
     # The Pose of the block in its initial location.
     # You may wish to replace these poses with estimates
     # from a perception node.
     block_poses.append(Pose(
-        position=Point(x=0.7, y=0.1265, z=-0.029),
+        position=Point(x=0.61, y=0.1265, z=-0.029),
         orientation=overhead_orientation))
     # Feel free to add additional desired poses for the object.
     # Each additional pose will get its own pick and place.
     block_poses.append(Pose(
-        position=Point(x=0.7, y=-0.1, z=-0.060),
+        position=Point(x=0.6, y=0.0, z=-0.060),
         orientation=overhead_orientation))
     # Move to the desired starting angles
     print("Running. Ctrl-c to quit")

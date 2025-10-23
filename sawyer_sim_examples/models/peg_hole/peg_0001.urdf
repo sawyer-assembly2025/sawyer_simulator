@@ -12,15 +12,15 @@
 	</geometry>
     </visual>
     <collision>
-      <origin xyz="0.0 0.0 0.0" rpy="-1.570759 0 0"/>
+      <origin xyz="0.0 0.0 -0.085" rpy="0 0 0"/>
 	<geometry>
-		<mesh filename="package://sawyer_sim_examples/models/peg_hole/STL/rigid_peg_0001.STL" scale="0.001 0.001 0.001"/>
+		<cylinder length="0.170" radius="0.02"/>
 	</geometry>
     </collision>
   </link>
   <gazebo reference="peg_0001">
     <material>Gazebo/White</material>
-     <mu1>10000</mu1>
-     <mu2>10000</mu2>
+     <mu1>100000.0</mu1>
+     <mu2>100000.0</mu2>
   </gazebo>
 </robot>

@@ -24,6 +24,11 @@
         <projection_type>perspective</projection_type>
       </camera>
     </gui>
-
+    
+    <joint name="fix_hole" type="fixed">
+      <parent>world</parent>
+      <child>hole_0001</child>
+      <pose>0.7 -0.1 0.775 0 0 0</pose>
+    </joint>
   </world>
 </sdf>

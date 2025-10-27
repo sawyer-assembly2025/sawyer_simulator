@@ -1,4 +1,12 @@
 <robot name="hole_0001">
+  <link name="world"></link>
+
+  <joint name="base_joint" type="fixed">
+  <origin xyz="0 0 0" rpy="0 0 0"/>
+  <parent link="world"/>
+  <child link="hole_0001"/>
+  </joint>
+
   <link name="hole_0001">
     <inertial>
       <origin xyz="0.0 0.0 0.035" rpy="1.570759 0 0"/>
@@ -21,7 +29,7 @@
   <gazebo reference="hole_0001">
     <material>Gazebo/Blue</material>
     <static>true</static>
-     <mu1>100000.0</mu1>
-     <mu2>100000.0</mu2>
+     <mu1>10.0</mu1>
+     <mu2>10.0</mu2>
   </gazebo>
 </robot>

@@ -83,7 +83,7 @@ class PickAndPlace(object):
         print("approach pose: ", approach)
         joint_angles = self._limb.ik_request(approach, self._tip_name)
         print("Approach joint_angles: ", joint_angles)
-        self._limb.set_joint_position_speed(0.001)
+        self._limb.set_joint_position_speed(0.0001)
         self._guarded_move_to_joint_position(joint_angles)
         self._limb.set_joint_position_speed(0.1)
 
@@ -269,13 +269,14 @@ def main():
     # You may wish to replace these poses with estimates
     # from a perception node.
     block_poses.append(Pose(
-        position=Point(x=0.61, y=0.1265, z=-0.029),
+        position=Point(x=0.6, y=0.1265, z=-0.029),
         orientation=overhead_orientation))
     # Feel free to add additional desired poses for the object.
     # Each additional pose will get its own pick and place.
     block_poses.append(Pose(
         position=Point(x=0.6, y=0.0, z=-0.060),
         orientation=overhead_orientation))
+    rospy.sleep(30.0)
     # Move to the desired starting angles
     print("Running. Ctrl-c to quit")
     pnp.move_to_start(starting_joint_angles)

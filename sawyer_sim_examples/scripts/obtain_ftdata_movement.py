@@ -17,7 +17,6 @@ import numpy as np
 import os
 from datetime import datetime
 from intera_interface import robot_ctl_ik as robot
-from intera_interface import ATI_Net as ati
 from geometry_msgs.msg import WrenchStamped
 import multiprocessing
 
@@ -93,16 +92,17 @@ def adquisition_cycle(robot,pos_command,step, test_time=1.0, category=[]):
     arg = category
 
     try:
-        sub = rospy.Subscriber("/robot/ft_sensor_topic/", WrenchStamped, obtain_ftdata, callback_args=(arg[0][0],arg[0][1],arg[0][2],arg[0][3],arg[0][4],arg[0][5]))
+        sub = rospy.Subscriber("/robot/ati_ft_sensor_topic/", WrenchStamped, obtain_ftdata, callback_args=(arg[0][0],arg[0][1],arg[0][2],arg[0][3],arg[0][4],arg[0][5]))
 
         #Define the duration you want the subscriber to run (e.g., 10 seconds)
         duration = rospy.Duration(test_time)
-        start_time = rospy.Time.now()
         rospy.loginfo("Ft data adquisition started. It will run for %s seconds.", duration/1e9)
         
         #Move robot to desired position
         move_to_pos(robot,pos_command,step)
 
+        #Start to count time after movement finished
+        start_time = rospy.Time.now()
         # rospy.spin() would block until shutdown, so we use a loop
         while rospy.Time.now() - start_time < duration and not rospy.is_shutdown():
             # Sleep to prevent the loop from consuming all CPU resources
@@ -181,13 +181,10 @@ if __name__ == '__main__':
             category = movement[1]
 
             #Creating parallel processes
-            adquisition_cycle(robot=sawyer, pos_command=direction, step=0.1, test_time=5.0, category=category)
+            adquisition_cycle(robot=sawyer, pos_command=direction, step=0.1, test_time=1.0, category=category)
     
             # both processes finished
             rospy.loginfo("Movement Done to %s, returning to home for new movement", direction)
-
-            #Wait 1 seconds
-            time.sleep(1)
 
             #Move robot to home
             sawyer.move_to_home()

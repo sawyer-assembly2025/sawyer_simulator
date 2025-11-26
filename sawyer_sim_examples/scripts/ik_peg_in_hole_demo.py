@@ -37,140 +37,9 @@ from geometry_msgs.msg import (
 )
 from tf.transformations import quaternion_slerp
 import intera_interface
+from intera_interface import robot_ctl_ik as robot
 
-class PickAndPlace(object):
-    def __init__(self, limb="right", hover_distance = 0.15, tip_name="right_gripper_tip"):
-        self._limb_name = limb # string
-        self._tip_name = tip_name # string
-        self._hover_distance = hover_distance # in meters
-        self._limb = intera_interface.Limb(limb)
-        self._gripper = intera_interface.Gripper()
-        # verify robot is enabled
-        print("Getting robot state... ")
-        self._rs = intera_interface.RobotEnable(intera_interface.CHECK_VERSION)
-        self._init_state = self._rs.state().enabled
-        print("Enabling robot... ")
-        self._rs.enable()
-
-    def move_to_start(self, start_angles=None):
-        print("Moving the {0} arm to start pose...".format(self._limb_name))
-        print("Moving to start angles: ", start_angles)
-        if not start_angles:
-            start_angles = dict(zip(self._joint_names, [0]*7))
-        self._guarded_move_to_joint_position(start_angles)
-        self.gripper_open()
-
-    def _guarded_move_to_joint_position(self, joint_angles, timeout=5.0):
-        if rospy.is_shutdown():
-            return
-        if joint_angles:
-            self._limb.move_to_joint_positions(joint_angles,timeout=timeout)
-        else:
-            rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
-
-    def gripper_open(self):
-        self._gripper.open()
-        rospy.sleep(1.0)
-
-    def gripper_close(self):
-        self._gripper.close()
-        rospy.sleep(1.0)
-
-    def _approach(self, pose):
-        approach = copy.deepcopy(pose)
-        # approach with a pose the hover-distance above the requested pose
-        approach.position.z = approach.position.z + self._hover_distance
-        print("approach pose: ", approach)
-        joint_angles = self._limb.ik_request(approach, self._tip_name)
-        print("Approach joint_angles: ", joint_angles)
-        self._limb.set_joint_position_speed(0.0001)
-        self._guarded_move_to_joint_position(joint_angles)
-        self._limb.set_joint_position_speed(0.1)
-
-    def _retract(self):
-        # retrieve current pose from endpoint
-        current_pose = copy.deepcopy(self._limb.endpoint_pose())
-        ik_pose = Pose()
-        ik_pose.position.x = current_pose['position'].x
-        ik_pose.position.y = current_pose['position'].y
-        ik_pose.position.z = current_pose['position'].z + self._hover_distance
-        ik_pose.orientation.x = current_pose['orientation'].x
-        ik_pose.orientation.y = current_pose['orientation'].y
-        ik_pose.orientation.z = current_pose['orientation'].z
-        ik_pose.orientation.w = current_pose['orientation'].w
-        self._servo_to_pose(ik_pose)
-
-    def _servo_to_pose(self, pose, time=4.0, steps=400.0):
-        ''' An *incredibly simple* linearly-interpolated Cartesian move '''
-        r = rospy.Rate(1/(time/steps)) # Defaults to 100Hz command rate
-        current_pose = self._limb.endpoint_pose()
-        ik_delta = Point()
-        ik_delta.x = (current_pose['position'].x - pose.position.x) / steps
-        ik_delta.y = (current_pose['position'].y - pose.position.y) / steps
-        ik_delta.z = (current_pose['position'].z - pose.position.z) / steps
-        q_current = [current_pose['orientation'].x, 
-                     current_pose['orientation'].y,
-                     current_pose['orientation'].z,
-                     current_pose['orientation'].w]
-        q_pose = [pose.orientation.x,
-                  pose.orientation.y,
-                  pose.orientation.z,
-                  pose.orientation.w]
-        for d in range(int(steps), -1, -1):
-            if rospy.is_shutdown():
-                return
-            ik_step = Pose()
-            ik_step.position.x = d*ik_delta.x + pose.position.x 
-            ik_step.position.y = d*ik_delta.y + pose.position.y
-            ik_step.position.z = d*ik_delta.z + pose.position.z
-            # Perform a proper quaternion interpolation
-            q_slerp = quaternion_slerp(q_current, q_pose, d/steps)
-            ik_step.orientation.x = q_slerp[0]
-            ik_step.orientation.y = q_slerp[1]
-            ik_step.orientation.z = q_slerp[2]
-            ik_step.orientation.w = q_slerp[3]
-            joint_angles = self._limb.ik_request(ik_step, self._tip_name)
-            if joint_angles:
-                    self._limb.set_joint_position_speed(0.01)
-                    self._limb.set_joint_positions(joint_angles)
-            else:
-                rospy.logerr("No Joint Angles provided for move_to_joint_positions. Staying put.")
-            r.sleep()
-        rospy.sleep(1.0)
-
-    def pick(self, pose):
-        print("pick")
-        if rospy.is_shutdown():
-            return
-        # open the gripper
-        self.gripper_open()
-        # servo above pose
-        self._approach(pose)
-        # servo to pose
-        self._servo_to_pose(pose)
-        if rospy.is_shutdown():
-            return
-        # close gripper
-        self.gripper_close()
-        # retract to clear object
-        self._retract()
-
-    def place(self, pose):
-        print("place")
-        if rospy.is_shutdown():
-            return
-        # servo above pose
-        self._approach(pose)
-        # servo to pose
-        self._servo_to_pose(pose)
-        if rospy.is_shutdown():
-            return
-        # open the gripper
-        self.gripper_open()
-        # retract to clear object
-        self._retract()
-
-def load_gazebo_models(table_pose=Pose(position=Point(x=0.75, y=0.0, z=0.0)),
+def load_gazebo_models(table_pose=Pose(position=Point(x=0.90, y=0.0, z=0.0)),
                        table_reference_frame="world",
                        peg_pose=Pose(position=Point(x=0.6, y=0.1265, z=0.9425)),
                        hole_pose=Pose(position=Point(x=0.6, y=0.00, z=0.7725)),
@@ -255,9 +124,9 @@ def main():
                              'right_j2': 0.0293680414401436,
                              'right_j3': 2.17518162913313,
                              'right_j4':  -0.06703022873354225,
-                             'right_j5': 0.3968371433926965,
+                             'right_j5': 0.3668371433926965,
                              'right_j6': 1.7659649178699421}
-    pnp = PickAndPlace(limb, hover_distance)
+    
     # An orientation for gripper fingers to be overhead and parallel to the obj
     overhead_orientation = Quaternion(
                              x=0.0,
@@ -276,16 +145,27 @@ def main():
     block_poses.append(Pose(
         position=Point(x=0.6, y=0.0, z=-0.060),
         orientation=overhead_orientation))
-    rospy.sleep(30.0)
+    rospy.sleep(1.0)
     # Move to the desired starting angles
-    print("Running. Ctrl-c to quit")
-    pnp.move_to_start(starting_joint_angles)
-    idx = 0
-    print("\nPicking...")
-    pnp.pick(block_poses[idx])
-    print("\nPlacing...")
-    idx = (idx+1) % len(block_poses)
-    pnp.place(block_poses[idx])
+    sawyer = robot.SawyerRobot()
+
+    sawyer.move_to_home()
+    rospy.sleep(2.0)
+    sawyer.move_to_cartesian_absolute(position=[0.6,0.1265,0.15],orientation=[-3.13,0.0,-3.12], linear_speed=0.1)
+    rospy.sleep(1.0)
+    sawyer.move_to_cartesian_relative(position=[0.0,0.0,-0.17],orientation=[0.0,0.0,0.0])
+    rospy.sleep(1.0)
+    sawyer.close_gripper()
+    rospy.sleep(1.0)
+    sawyer.move_to_cartesian_relative(position=[0.0,0.0,0.17],orientation=[0.0,0.0,0.0])
+    rospy.sleep(1.0)
+    sawyer.move_to_cartesian_relative(position=[0.0,-0.1265,0.0],orientation=[0.0,0.0,0.0])
+    rospy.sleep(1.0)
+    sawyer.move_to_cartesian_relative(position=[0.0,0.0,-0.17],orientation=[0.0,0.0,0.0], linear_speed=0.01)
+    rospy.sleep(1.0)
+    sawyer.open_gripper()
+    sawyer.move_to_cartesian_relative(position=[0.0,0.0,0.17],orientation=[0.0,0.0,0.0])
+
 
     return 0
 

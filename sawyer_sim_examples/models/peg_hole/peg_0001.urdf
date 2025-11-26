@@ -2,7 +2,7 @@
   <link name="peg_0001">
     <inertial>
       <origin xyz="0.0 0.0 -0.085" rpy="-1.570759 0 0"/>
-      <mass value="0.050" />
+      <mass value="0.193" />
       <inertia  ixx="0.0004849452" ixy="0.0"  ixz="0.0"  iyy="0.0000386667"  iyz="0.0"  izz="0.0004849452" />
     </inertial>
     <visual>

@@ -26,16 +26,16 @@ robot:
         pid: {p: 1500.0,  i: 20.0, d: 25.0}
       right_j1_controller:
         joint: right_j1
-        pid: {p: 4000.0,  i: 100.0, d: 30.0}
+        pid: {p: 4000.0,  i: 10.0, d: 60.0}
       right_j2_controller:
         joint: right_j2
-        pid: {p: 750.0,  i: 20.0, d: 30.0}
+        pid: {p: 750.0,  i: 10.0, d: 30.0}
       right_j3_controller:
         joint: right_j3
-        pid: {p: 5000.0,  i: 100.0, d: 50.0}
+        pid: {p: 1900.0,  i: 10.0, d: 60.0}
       right_j4_controller:
         joint: right_j4
-        pid: {p: 900.0,  i: 20.0, d: 8.0}
+        pid: {p: 900.0,  i: 10.0, d: 8.0}
       right_j5_controller:
         joint: right_j5
         pid: {p: 500.0,  i: 2.0, d: 5.0}

@@ -29,7 +29,7 @@
   <gazebo reference="hole_0001">
     <material>Gazebo/Blue</material>
     <static>true</static>
-     <mu1>10.0</mu1>
-     <mu2>10.0</mu2>
+     <mu1>0.001</mu1>
+     <mu2>0.001</mu2>
   </gazebo>
 </robot>
